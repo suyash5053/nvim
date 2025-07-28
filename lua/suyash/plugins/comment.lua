@@ -1,13 +1,13 @@
 return {
-	{ 'echasnovski/mini.comment', 
-version = "*",
-opts = {
-	mappings =  {
-		comment = '<leader>/',
-		comment_line = '<leader>/',
-		textobject = '<leader>/',
+	{
+		"echasnovski/mini.comment",
+		version = "*",
+		opts = {
+			mappings = {
+				comment = "<leader>/",
+				comment_line = "<leader>/",
+				textobject = "<leader>/",
+			},
+		},
 	},
-
-},
-}
 }
