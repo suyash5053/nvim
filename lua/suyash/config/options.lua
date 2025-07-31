@@ -1,8 +1,9 @@
 vim.g.mapleader = " "
 vim.g.have_nerd_font = true
 
-local o = vim.o
+local o = vim.opt
 
+o.showmode = false
 o.number = true
 o.relativenumber = true
 o.mouse = "a"
@@ -24,3 +25,23 @@ o.tabstop = 4 -- A TAB in the file counts as 4 spaces
 o.shiftwidth = 4 -- Indent levels use 4 spaces
 o.softtabstop = 4 -- Pressing <Tab> inserts 4 spaces
 o.expandtab = true
+
+o.smartindent = true
+o.breakindent = true
+o.completeopt = { "menu", "menuone", "noselect" }
+o.termguicolors = true
+
+--ufo things
+vim.o.foldcolumn = "1"
+vim.opt.foldenable = true
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+vim.opt.foldnestmax = 5
+vim.opt.foldtext = ""
+
+vim.diagnostic.config({
+	float = { border = "rounded" },
+	virtual_text = true,
+	-- virtual_text = { current_line = true },
+	virtual_lines = false,
+})

@@ -1,143 +1,98 @@
-return { -- Autocompletion
-	"hrsh7th/nvim-cmp",
-	-- event = 'InsertEnter',
-	dependencies = {
-		-- Snippet Engine & its associated nvim-cmp source
-		{
-			"L3MON4D3/LuaSnip",
-			build = (function()
-				-- Build Step is needed for regex support in snippets
-				-- This step is not supported in many windows environments
-				-- Remove the below condition to re-enable on windows
-				if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
-					return
-				end
-				return "make install_jsregexp"
-			end)(),
-		},
-		"saadparwaiz1/cmp_luasnip",
+return {
+    {
+        "hrsh7th/nvim-cmp",
+        event = { "InsertEnter" },
+        dependencies = {
+            "hrsh7th/cmp-nvim-lsp",
+            "hrsh7th/cmp-buffer",
+            "hrsh7th/cmp-path",
+            "hrsh7th/cmp-nvim-lsp-signature-help",
+            "saadparwaiz1/cmp_luasnip",
+            "onsails/lspkind.nvim",
+            "L3MON4D3/LuaSnip",
+        },
+        config = function()
+            local cmp = require("cmp")
+            local luasnip = require("luasnip")
+            local format_item_with_lspkind = require("lspkind").cmp_format({
+                mode = "symbol_text",
+                maxwidth = 50,
+                ellipsis_char = "...",
+                menu = {
+                    nvim_lsp = "[LSP]",
+                    buffer = "[Buffer]",
+                    path = "[Path]",
+                    luasnip = "[Snippet]",
+                    nvim_lsp_signature_help = "[Signature]",
+                },
+            })
 
-		-- Adds other completion capabilities.
-		--  nvim-cmp does not ship with all sources by default. They are split
-		--  into multiple repos for maintenance purposes.
-		"hrsh7th/cmp-nvim-lsp",
-		"hrsh7th/cmp-buffer",
-		"hrsh7th/cmp-path",
+            luasnip.config.setup({})
 
-		-- Adds a number of user-friendly snippets
-		"rafamadriz/friendly-snippets",
-	},
-	config = function()
-		local cmp = require("cmp")
-		require("luasnip.loaders.from_vscode").lazy_load()
-		local luasnip = require("luasnip")
-		luasnip.config.setup({})
+            cmp.setup({
+                snippet = {
+                    expand = function(args)
+                        luasnip.lsp_expand(args.body)
+                    end,
+                },
+                window = {
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered(),
+                },
+                completion = { completeopt = "menu,menuone,noinsert" },
+                mapping = cmp.mapping.preset.insert({
+                    ["<Tab>"] = cmp.mapping(function(fallback)
+                        if cmp.visible() then
+                            cmp.select_next_item()
+                        elseif luasnip.expand_or_jumpable(1) then
+                            luasnip.expand_or_jump(1)
+                        else
+                            fallback()
+                        end
+                    end, { "i", "s" }),
+                    ["<S-Tab>"] = cmp.mapping(function(fallback)
+                        if cmp.visible() then
+                            cmp.select_prev_item()
+                        elseif luasnip.jumpable(-1) then
+                            luasnip.jump(-1)
+                        else
+                            fallback()
+                        end
+                    end, { "i", "s" }),
+                    ["<C-u>"] = cmp.mapping.scroll_docs(-4), -- scroll up preview
+                    ["<C-d>"] = cmp.mapping.scroll_docs(4), -- scroll down preview
+                    ["<C-Space>"] = cmp.mapping.complete({}), -- show completion suggestions
+                    ["<C-c>"] = cmp.mapping.abort(), -- close completion window
+                    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                }),
 
-		local kind_icons = {
-			Text = "󰉿",
-			Method = "m",
-			Function = "󰊕",
-			Constructor = "",
-			Field = "",
-			Variable = "󰆧",
-			Class = "󰌗",
-			Interface = "",
-			Module = "",
-			Property = "",
-			Unit = "",
-			Value = "󰎠",
-			Enum = "",
-			Keyword = "󰌋",
-			Snippet = "",
-			Color = "󰏘",
-			File = "󰈙",
-			Reference = "",
-			Folder = "󰉋",
-			EnumMember = "",
-			Constant = "󰇽",
-			Struct = "",
-			Event = "",
-			Operator = "󰆕",
-			TypeParameter = "󰊄",
-		}
+                -- sources for autocompletion
+                sources = cmp.config.sources({
+                    { name = "nvim_lsp",               group_index = 1 }, -- lsp
+                    { name = "buffer",                 max_item_count = 5, group_index = 2 }, -- text within current buffer
+                    { name = "path",                   max_item_count = 3, group_index = 3 }, -- file system paths
+                    { name = "luasnip",                max_item_count = 3, group_index = 5 }, -- snippets
+                    { name = "nvim-lsp-signature-help" },
+                }),
+                -- Enable pictogram icons for lsp/autocompletion
+                formatting = {
+                    expandable_indicator = true,
+                    format = function(entry, item)
+                        local color_item = require("nvim-highlight-colors").format(entry, { kind = item.kind })
+                        item = format_item_with_lspkind(entry, item)
 
-		cmp.setup({
-			snippet = {
-				expand = function(args)
-					luasnip.lsp_expand(args.body)
-				end,
-			},
-			completion = { completeopt = "menu,menuone,noinsert" },
-			-- window = {
-			--     completion = cmp.config.window.bordered(),
-			--     documentation = cmp.config.window.bordered(),
-			-- },
-			mapping = cmp.mapping.preset.insert({
-				["<C-j>"] = cmp.mapping.select_next_item(), -- Select the [n]ext item
-				["<C-k>"] = cmp.mapping.select_prev_item(), -- Select the [p]revious item
-				["<CR>"] = cmp.mapping.confirm({ select = true }), -- Accept the completion with Enter.
-				["<C-c>"] = cmp.mapping.complete({}), -- Manually trigger a completion from nvim-cmp.
+                        if color_item.abbr_hl_group then
+                            item.kind_hl_group = color_item.abbr_hl_group
+                            item.kind = color_item.abbr
+                        end
 
-				-- Think of <c-l> as moving to the right of your snippet expansion.
-				--  So if you have a snippet that's like:
-				--  function $name($args)
-				--    $body
-				--  end
-				--
-				-- <c-l> will move you to the right of each of the expansion locations.
-				-- <c-h> is similar, except moving you backwards.
-				["<C-l>"] = cmp.mapping(function()
-					if luasnip.expand_or_locally_jumpable() then
-						luasnip.expand_or_jump()
-					end
-				end, { "i", "s" }),
-				["<C-h>"] = cmp.mapping(function()
-					if luasnip.locally_jumpable(-1) then
-						luasnip.jump(-1)
-					end
-				end, { "i", "s" }),
-
-				-- Select next/previous item with Tab / Shift + Tab
-				["<Tab>"] = cmp.mapping(function(fallback)
-					if cmp.visible() then
-						cmp.select_next_item()
-					elseif luasnip.expand_or_locally_jumpable() then
-						luasnip.expand_or_jump()
-					else
-						fallback()
-					end
-				end, { "i", "s" }),
-				["<S-Tab>"] = cmp.mapping(function(fallback)
-					if cmp.visible() then
-						cmp.select_prev_item()
-					elseif luasnip.locally_jumpable(-1) then
-						luasnip.jump(-1)
-					else
-						fallback()
-					end
-				end, { "i", "s" }),
-			}),
-			sources = {
-				{ name = "nvim_lsp" },
-				{ name = "luasnip" },
-				{ name = "buffer" },
-				{ name = "path" },
-			},
-			formatting = {
-				fields = { "kind", "abbr", "menu" },
-				format = function(entry, vim_item)
-					-- Kind icons
-					vim_item.kind = string.format("%s", kind_icons[vim_item.kind])
-					-- vim_item.kind = string.format('%s %s', kind_icons[vim_item.kind], vim_item.kind) -- This concatonates the icons with the name of the item kind
-					vim_item.menu = ({
-						nvim_lsp = "[LSP]",
-						luasnip = "[Snippet]",
-						buffer = "[Buffer]",
-						path = "[Path]",
-					})[entry.source.name]
-					return vim_item
-				end,
-			},
-		})
-	end,
+                        return item
+                    end,
+                },
+                experimental = {
+                    ghost_text = true,
+                },
+            })
+        end,
+    },
 }
