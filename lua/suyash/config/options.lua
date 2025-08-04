@@ -21,9 +21,9 @@ o.ignorecase = true
 o.smartcase = true
 
 o.scrolloff = 10
-o.tabstop = 4 -- A TAB in the file counts as 4 spaces
-o.shiftwidth = 4 -- Indent levels use 4 spaces
-o.softtabstop = 4 -- Pressing <Tab> inserts 4 spaces
+o.tabstop = 2 -- A TAB in the file counts as 4 spaces
+o.shiftwidth = 2 -- Indent levels use 4 spaces
+o.softtabstop = 2 -- Pressing <Tab> inserts 4 spaces
 o.expandtab = true
 
 o.smartindent = true
