@@ -32,12 +32,14 @@ o.completeopt = { "menu", "menuone", "noselect" }
 o.termguicolors = true
 
 --ufo things
-vim.o.foldcolumn = "1"
-vim.opt.foldenable = true
-vim.opt.foldlevel = 99
-vim.opt.foldlevelstart = 99
-vim.opt.foldnestmax = 5
-vim.opt.foldtext = ""
+o.foldcolumn = "1"
+o.foldenable = true
+o.foldlevel = 99
+o.foldlevelstart = 99
+o.foldnestmax = 5
+o.foldtext = ""
+
+o.timeoutlen = 300
 
 vim.diagnostic.config({
 	float = { border = "rounded" },
